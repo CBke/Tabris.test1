@@ -1,74 +1,70 @@
 // Create a collection view, initialize its cells and fill it with items
 const {Button, CollectionView, Composite, ImageView, TextView, ScrollView, NavigationView,Page, ui} = require('tabris');
-
+let json = "";
 
 let navigationView = new NavigationView({
   left: 0, top: 0, right: 0, bottom: 0,
   drawerActionVisible: true
 }).appendTo(ui.contentView);
-
-var Screens = [];
   
 fetch('http://cursussen.uantwerpen.be/Home/Level')
     .then(response => response.json())
-    .then((json) => {
-  
-  let page = CreatePage(json.Title);
-  Screens.push(page);
-  Screens[0].appendTo(navigationView);
-  
-  CreateButtons(page, json.Items);
+    .then((jso) => 
+         {
+          json = jso;
+          CreatePage('').appendTo(navigationView);
+         }
+         
+         ); 
 
-for (var i = 0; i < json.Items.length; i++)
-  {
-    let page = CreatePage(json.Items[i].Title);
-    Screens.push(page);
-   CreateButtons(page, json.Items[i].Items);
-    
-    for (var j = 0; j <  json.Items[i].Items.length; j++)
-    {
-      let page = CreatePage( json.Items[i].Items[j].Title);
-      Screens.push(page);
-       CreateButtons(page, json.Items[i].Items[j].Items);
-       for (var k = 0; k <  json.Items[i].Items[j].Items.length; k++)
-    {
-      let page = CreatePage( json.Items[i].Items[j].Items[k].Title);
-      Screens.push(page);
-       CreateButtons(page, json.Items[i].Items[j].Items[k].Items);
-    }
-    }
-    }
-  
-  
-    
-   let endpage = new Page({ title:  'JAh', autoDispose:false})
-  Screens.push(endpage);
 
-  
-});
-
-function CreatePage(Title)
+function CreatePage(Route)
 {
-  return new Page({ title: Title, autoDispose:false});
+  
+  console['info']('REZUEST' + Route); 
+  
+  
+  let page = new Page({ title: "Title", autoDispose:false});
+  let path = Route.split("/").map(Number);
+  
+   console['info']('path.length' + path.length); 
+  
+  console['info']('values :' + path);
+  
+  switch (path.length) {
+  case 1:
+       console['info']('path.length :' + path.length);
+    FillWithData(page, json, Route)
+  break;
+  case 2:
+    FillWithData(page,json.Items[path[0]], Route)
+  break;
+  case 3:
+    FillWithData(page,json.Items[path[0]].Items[path[1]], Route)
+  break;
+  case 4:
+    FillWithData(page,json.Items[path[0]].Items[path[1]].Items[path[2]], Route)
+  break;
+  }
+  return page;
+  
 }
-function CreateButtons(page, Items)
+function FillWithData(page, json, Route)
 {
-  
-  //var bttsn = [];
-  for (var i = 0; i < Items.length; i++)
+   console['info']('json.Items.length :' + json.Items.length);
+  for (var i = 0; i < json.Items.length; i++)
   {
-    let text = Items[i].Item;
-   
+    let text = json.Items[i].Item;
+  
     new Button({
       left: 16, right: 16, top: 'prev()',
       text: text +  i ,
-      id: i
+      id: Route + "/" + i
     })
       .on('select', ({target}) =>
           {
-           console['info'](target.id );
-           Screens[target.id].appendTo(navigationView);
+           CreatePage(target.id).appendTo(navigationView)
     })
       .appendTo(page);
-  }
+  } 
 }
