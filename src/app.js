@@ -86,7 +86,7 @@ function FillWithBundlesData(json, Route) {
         let scrollView1 = new ScrollView({
             left: 0,
             right: 0,
-            top: 0,
+            top: 5,
             bottom: 0
         }).appendTo(Pakkettab);
         for (var i = 0; i < json.Bundles.length; i++) {
@@ -94,10 +94,13 @@ function FillWithBundlesData(json, Route) {
             let Bundle = json.Bundles[i];
             new Composite({
                     id: 'detailsView',
-                    left: 0,
-                    right: 0,
-                    top: 'prev()',
-                    direction: 'horizontal'
+                    left: 10,
+                    right: 10,
+                    top: 'prev() 10',
+
+                    cornerRadius: 2,
+                    elevation: 2,
+
                 }) //.on('tap', () => this._openReadBookPage())
                 .append(
                     new TextView({
@@ -116,7 +119,7 @@ function FillWithBundlesData(json, Route) {
                         id: 'priceLabel',
                         left: '#coverImage 16',
                         top: 'prev() 8',
-                        text: Bundle.Price
+                        text: '€ ' + Bundle.Price
                     })
                 )
                 .appendTo(scrollView1);
@@ -142,13 +145,13 @@ function FillWithBundlesData(json, Route) {
                 id: 'detailsView',
                 left: 0,
                 right: 0,
-                top: 'prev()',
-                direction: 'horizontal'
+                top: 'prev() 6',
+
             }) //.on('tap', () => this._openReadBookPage())
             .append(
                 new TextView({
                     id: 'titleLabel',
-                    top: 16,
+                    top: 'prev() 16',
                     right: 16,
                     text: Vak.Name
                 }))
@@ -156,20 +159,29 @@ function FillWithBundlesData(json, Route) {
 
         for (var j = 0; j < Vak.Cursussen.length; j++) {
             let Cursus = Vak.Cursussen[j];
-            c1.append(
-                new TextView({
-                    id: 'authorLabel',
-                    left: '#coverImage 16',
-                    top: 'prev() 8',
-                    text: Cursus.Descr
-                }),
-                new TextView({
-                    id: 'priceLabel',
-                    left: '#coverImage 16',
-                    top: 'prev() 8',
-                    text: Cursus.Price
-                })
-            );
+            new Composite({
+                    id: 'detailsView',
+                    left: 10,
+                    right: 10,
+                    top: 'prev() 10',
+                    cornerRadius: 2,
+                    elevation: 2,
+                }).append(
+                    new TextView({
+                        id: 'authorLabel',
+                        left: '#coverImage 16',
+                        top: 'prev() 8',
+                        text: Cursus.Descr
+                    }),
+                    new TextView({
+                        id: 'priceLabel',
+                        left: '#coverImage 16',
+                        top: 'prev() 8',
+                        bottom: 5,
+                        text: '€ ' + Cursus.Price
+                    })
+                )
+                .appendTo(scrollView2);;
         }
 
     }
@@ -190,18 +202,34 @@ function FillWithMenuData(json, Route) {
     }).appendTo(page);
 
     for (var i = 0; i < json.Items.length; i++) {
-        new Button({
+
+        new Composite({
                 left: 16,
                 right: 16,
-                top: 'prev()',
+                top: 'prev() 10',
+                cornerRadius: 2,
+                elevation: 2,
+
                 text: json.Items[i].Item,
                 id: Route + "/" + i
             })
-            .on('select', ({
+            .on('tap', ({
                 target
             }) => {
                 CreatePage(target.id)
             })
+            .append(
+                new TextView({
+                    id: 'authorLabel',
+                    left: 16,
+                    top: 'prev() 25',
+                    bottom: 25,
+                    text: json.Items[i].Item,
+                    right: 16
+                })
+                //new TextView({id: 'priceLabel', left: '#coverImage 16', top: 'prev() 8', text: Cursus.Price})
+            )
             .appendTo(scrollView);
     }
 }
+
