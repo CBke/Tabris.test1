@@ -1,5 +1,5 @@
 // Create a collection view, initialize its cells and fill it with items
-const {Button, CollectionView, Composite, ImageView, TextView, ScrollView, NavigationView,Page, ui} = require('tabris');
+const { Button, CollectionView, Composite, ImageView, TextView, ScrollView, NavigationView,Page, ui} = require('tabris');
 let json = "";
 
 let navigationView = new NavigationView({
@@ -8,63 +8,43 @@ let navigationView = new NavigationView({
 }).appendTo(ui.contentView);
   
 fetch('http://cursussen.uantwerpen.be/Home/Level')
-    .then(response => response.json())
-    .then((jso) => 
-         {
-          json = jso;
-          CreatePage('').appendTo(navigationView);
-         }
-         
-         ); 
-
+  .then(response => response.json())
+  .then((jso) => json = jso)
+  .then(() => CreatePage('')); 
 
 function CreatePage(Route)
 {
   
-  console['info']('REZUEST' + Route); 
-  
-  
-  let page = new Page({ title: "Title"});
   let path = Route.split("/").map(Number);
-  
-   console['info']('path.length' + path.length); 
-  
-  console['info']('values :' + path);
   
   switch (path.length) {
   case 1:
        console['info']('path.length :' + path.length);
-    FillWithData(page, json, Route)
+    FillWithData(json, Route)
   break;
   case 2:
-    FillWithData(page,json.Items[path[0]], Route)
+    FillWithData(json.Items[path[0]], Route)
   break;
   case 3:
-    FillWithData(page,json.Items[path[0]].Items[path[1]], Route)
+    FillWithData(json.Items[path[0]].Items[path[1]], Route)
   break;
   case 4:
-    FillWithData(page,json.Items[path[0]].Items[path[1]].Items[path[2]], Route)
+    FillWithData(json.Items[path[0]].Items[path[1]].Items[path[2]], Route)
   break;
   }
-  return page;
-  
 }
-function FillWithData(page, json, Route)
+function FillWithData(json, Route)
 {
-   console['info']('json.Items.length :' + json.Items.length);
+   let page = new Page({ title: json.Title}).appendTo(navigationView);
+  
   for (var i = 0; i < json.Items.length; i++)
   {
-    let text = json.Items[i].Item;
-  
     new Button({
       left: 16, right: 16, top: 'prev()',
-      text: text +  i ,
+      text: json.Items[i].Item,
       id: Route + "/" + i
     })
-      .on('select', ({target}) =>
-          {
-           CreatePage(target.id).appendTo(navigationView)
-    })
+      .on('select', ({target}) => { CreatePage(target.id) })
       .appendTo(page);
   } 
 }
