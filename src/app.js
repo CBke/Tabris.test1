@@ -24,7 +24,7 @@ function CreatePage(Route)
   console['info']('REZUEST' + Route); 
   
   
-  let page = new Page({ title: "Title", autoDispose:false});
+  let page = new Page({ title: "Title"});
   let path = Route.split("/").map(Number);
   
    console['info']('path.length' + path.length); 
