@@ -1,235 +1,196 @@
-// Create a collection view, initialize its cells and fill it with items
 const {
-    Button,
     CollectionView,
     Composite,
     ImageView,
+    NavigationView,
+    Page,
+    ScrollView,
     Tab,
     TabFolder,
     TextView,
-    ScrollView,
-    NavigationView,
-    Page,
     ui
 } = require('tabris');
+
 let json = "";
+let navigationView = ""
 
-let navigationView = new NavigationView({
-    left: 0,
-    top: 0,
-    right: 0,
-    bottom: 0,
-    drawerActionVisible: true
-}).appendTo(ui.contentView);
-
-fetch('http://cursussen.uantwerpen.be/Home/Level')
-    .then(response => response.json())
-    .then((jso) => json = jso)
-    .then(() => CreatePage(''));
-
-
-function CreatePage(Route) {
-
-    let path = Route.split("/").map(Number);
-    console['info']('path :' + path);
-
-    console['info']('path.length :' + path.length);
-
-    switch (path.length) {
-        case 1:
-            FillWithMenuData(json, Route)
-            break;
-        case 2:
-            FillWithMenuData(json.Items[path[1]], Route)
-            break;
-        case 3:
-            FillWithMenuData(json.Items[path[1]].Items[path[2]], Route)
-            break;
-        case 4:
-            FillWithMenuData(json.Items[path[1]].Items[path[2]].Items[path[3]], Route)
-            break;
-        case 5:
-            FillWithBundlesData(json.Items[path[1]].Items[path[2]].Items[path[3]].Items[path[4]], Route)
-            break;
-    }
-
-}
-
-function FillWithBundlesData(json, Route) {
+function MenuTab(datanode) {
     let page = new Page({
-        title: json.Item
-    }).appendTo(navigationView);
-    let scrollView = new ScrollView({
+        title: datanode.Title,
+        autoDispose: false
+    });
+    let scrollView1 = new ScrollView({
         left: 0,
         right: 0,
-        top: 0,
+        top: 5,
         bottom: 0
-    }).appendTo(page);
-    console['info']('json.NumerOfBundles :' + json.NumerOfBundles);
+    }).appendTo(page)
+    console.log('selected', datanode.Items.length)
 
-    // new TextView({id: 'titleLabel', text: json.Nummer}),
+    new CollectionView({
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        itemCount: datanode.Items.length,
+        cellHeight: 50,
+        createCell: () => {
+            let cell = new Composite({
+                    id: 10
+                })
+                .on('tap', ({
+                    target
+                }) => {
+                    if (!datanode.Items[target.idx].hasOwnProperty('Page')) {
+                        if (datanode.Items[target.idx].hasOwnProperty('Items')) {
+                            datanode.Items[target.idx].Page = MenuTab(datanode.Items[target.idx])
+                        }
+                        if (datanode.Items[target.idx].hasOwnProperty('NumerOfBundles')) {
+                            datanode.Items[target.idx].Page = DetailTab(datanode.Items[target.idx])
+                        }
+                    }
+                    datanode.Items[target.idx].Page
+                        .appendTo(navigationView);
+                });
+
+
+            new TextView({
+
+                id: 'senderText',
+                top: 8,
+                left: 16,
+                font: 'bold 18px'
+            }).appendTo(cell);
+
+            new TextView({
+
+                id: 'idx',
+                top: 8,
+                left: 16,
+                font: 'bold 18px'
+            }).appendTo(cell);
+            return cell;
+
+        },
+        updateCell: (cell, index) => {
+            let vak = datanode.Items[index];
+            cell.find('#senderText').set('text', vak.Item);
+            cell.idx = index;
+
+
+        }
+    }).appendTo(scrollView1);
+
+    return page
+}
+
+function DetailTab(datanode) {
+
+    let page = new Page({
+            title: datanode.Item,
+            autoDispose: false
+        })
+        .on('appear', () => {
+            if (datanode.NumerOfBundles === 0) {
+                ui.find('#Paketten').first().visible = false
+            }
+        });
 
     let tabFolder = new TabFolder({
         left: 0,
         top: 0,
         right: 0,
         bottom: 0,
-        paging: true // enables swiping. To still be able to open the developer console in iOS, swipe from the bottom right.
-    }).appendTo(scrollView);
+        paging: true
+    }).appendTo(page);
 
-
-    if (json.NumerOfBundles > 0) {
-
-        let Pakkettab = new Tab({
-            title: "Paketten"
-        }).appendTo(tabFolder);
-        let scrollView1 = new ScrollView({
-            left: 0,
-            right: 0,
-            top: 5,
-            bottom: 0
-        }).appendTo(Pakkettab);
-        for (var i = 0; i < json.Bundles.length; i++) {
-
-            let Bundle = json.Bundles[i];
-            new Composite({
-                    id: 'detailsView',
-                    left: 10,
-                    right: 10,
-                    top: 'prev() 10',
-
-                    cornerRadius: 2,
-                    elevation: 2,
-
-                }) //.on('tap', () => this._openReadBookPage())
-                .append(
-                    new TextView({
-                        id: 'titleLabel',
-                        top: 16,
-                        right: 16,
-                        text: Bundle.Nummer
-                    }),
-                    new TextView({
-                        id: 'authorLabel',
-                        left: '#coverImage 16',
-                        top: 'prev() 8',
-                        text: Bundle.Descr
-                    }),
-                    new TextView({
-                        id: 'priceLabel',
-                        left: '#coverImage 16',
-                        top: 'prev() 8',
-                        text: '€ ' + Bundle.Price
-                    })
-                )
-                .appendTo(scrollView1);
+    let Pakkettab = new Tab({
+        title: "Paketten",
+        id: 'Paketten',
+    }).appendTo(tabFolder);
+    let scrollView1 = new ScrollView({
+        left: 0,
+        right: 0,
+        top: 5,
+        bottom: 0
+    }).appendTo(Pakkettab);
+    new TextView({
+        id: 'senderText',
+        top: 8,
+        left: 16,
+        font: 'bold 18px'
+    }).appendTo(scrollView1);
+    new CollectionView({
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        itemCount: datanode.Bundles.length,
+        cellHeight: 120,
+        createCell: () => {
+            let cell = new Composite();
+            new TextView({
+                id: 'senderText',
+                top: 8,
+                left: 16,
+                font: 'bold 18px'
+            }).appendTo(cell);
+            return cell;
+        },
+        updateCell: (cell, index) => {
+            let pakket = datanode.Bundles[index];
+            cell.find('#senderText').set('text', pakket.Descr);
         }
-    }
-
-
-    let tab = new Tab({
+    }).appendTo(scrollView1);
+    let Cursussentab = new Tab({
         title: "Cursussen"
     }).appendTo(tabFolder);
-
     let scrollView2 = new ScrollView({
         left: 0,
         right: 0,
         top: 0,
         bottom: 0
-    }).appendTo(tab);
-
-    for (var i = 0; i < json.Vakken.length; i++) {
-
-        let Vak = json.Vakken[i];
-        let c1 = new Composite({
-                id: 'detailsView',
-                left: 0,
-                right: 0,
-                top: 'prev() 6',
-
-            }) //.on('tap', () => this._openReadBookPage())
-            .append(
-                new TextView({
-                    id: 'titleLabel',
-                    top: 'prev() 16',
-                    right: 16,
-                    text: Vak.Name
-                }))
-            .appendTo(scrollView2);;
-
-        for (var j = 0; j < Vak.Cursussen.length; j++) {
-            let Cursus = Vak.Cursussen[j];
-            new Composite({
-                    id: 'detailsView',
-                    left: 10,
-                    right: 10,
-                    top: 'prev() 10',
-                    cornerRadius: 2,
-                    elevation: 2,
-                }).append(
-                    new TextView({
-                        id: 'authorLabel',
-                        left: '#coverImage 16',
-                        top: 'prev() 8',
-                        text: Cursus.Descr
-                    }),
-                    new TextView({
-                        id: 'priceLabel',
-                        left: '#coverImage 16',
-                        top: 'prev() 8',
-                        bottom: 5,
-                        text: '€ ' + Cursus.Price
-                    })
-                )
-                .appendTo(scrollView2);;
-        }
-
-    }
-
-}
-
-function FillWithMenuData(json, Route) {
-
-    let page = new Page({
-        title: json.Title
-    }).appendTo(navigationView);
-
-    let scrollView = new ScrollView({
+    }).appendTo(Cursussentab);
+    new CollectionView({
         left: 0,
-        right: 0,
         top: 0,
-        bottom: 0
-    }).appendTo(page);
-
-    for (var i = 0; i < json.Items.length; i++) {
-
-        new Composite({
+        right: 0,
+        bottom: 0,
+        itemCount: datanode.Vakken.length,
+        cellHeight: 120,
+        createCell: () => {
+            let cell = new Composite();
+            new TextView({
+                id: 'senderText',
+                top: 8,
                 left: 16,
-                right: 16,
-                top: 'prev() 10',
-                cornerRadius: 2,
-                elevation: 2,
-
-                text: json.Items[i].Item,
-                id: Route + "/" + i
-            })
-            .on('tap', ({
-                target
-            }) => {
-                CreatePage(target.id)
-            })
-            .append(
-                new TextView({
-                    id: 'authorLabel',
-                    left: 16,
-                    top: 'prev() 25',
-                    bottom: 25,
-                    text: json.Items[i].Item,
-                    right: 16
-                })
-                //new TextView({id: 'priceLabel', left: '#coverImage 16', top: 'prev() 8', text: Cursus.Price})
-            )
-            .appendTo(scrollView);
-    }
+                font: 'bold 18px'
+            }).appendTo(cell);
+            return cell;
+        },
+        updateCell: (cell, index) => {
+            let vak = datanode.Vakken[index];
+            cell.find('#senderText').set('text', vak.Name);
+        }
+    }).appendTo(scrollView2);
+    return page;
 }
 
+
+
+fetch('http://cursussen.uantwerpen.be/Home/Level')
+    .then(response => response.json())
+    .then((js) => {
+        json = js;
+
+        navigationView = new NavigationView({
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+            drawerActionVisible: true
+        }).appendTo(ui.contentView);
+
+        json.Page = MenuTab(json);
+        json.Page.appendTo(navigationView);
+    });
