@@ -1,4 +1,5 @@
 const {
+    ActivityIndicator, 
     CollectionView,
     Composite,
     ImageView,
@@ -12,13 +13,7 @@ const {
 } = require("tabris");
 
 let json = "";
-let navigationView = new NavigationView({
-    left: 0,
-    top: 0,
-    right: 0,
-    bottom: 0,
-    drawerActionVisible: true
-}).appendTo(ui.contentView);
+
 
 
 
@@ -58,7 +53,7 @@ function toFlatlistVak(Vak) {
     return t;
 }
 
-function MenuTab(datanode) {
+function MenuTab(datanode, navigationView) {
     let page = new Page({
         title: datanode.Title,
         autoDispose: false
@@ -91,7 +86,7 @@ function MenuTab(datanode) {
                     if (!datanode.Items[target.idx].hasOwnProperty("Page")) {
                         if (datanode.Items[target.idx].hasOwnProperty("Items")) {
 
-                            datanode.Items[target.idx].Page = MenuTab(datanode.Items[target.idx])
+                            datanode.Items[target.idx].Page = MenuTab(datanode.Items[target.idx], navigationView)
                         } else {
 
 
@@ -237,7 +232,7 @@ function VakItem() {
         right: 0,
         id: "descr",
         left: 16,
-        right: 16,
+        right: 8,
         alignment: "right"
     }).appendTo(cell2);
     return cell;
@@ -350,10 +345,38 @@ function DetailTab(datanode) {
     return page;
 }
 
+   
+
+
 fetch("http://cursussen.uantwerpen.be/Home/Level")
     .then(response => response.json())
     .then((js) => {
+  let navigationView = new NavigationView({
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0
+  })
+  .appendTo(ui.contentView);
+  
         json = js;
-        json.Page = MenuTab(json);
+        json.Page = MenuTab(json, navigationView);
         json.Page.appendTo(navigationView);
-    });
+  		ui.find('.LL').set('visible', false);        
+});
+    
+let activityIndicator = new ActivityIndicator({
+  class:"LL",
+  centerX: 0,
+  centerY: 0
+}).appendTo(ui.contentView);
+
+new TextView({
+    class:"LL",
+    top:"prev() 0",
+    alignment: 'center',
+    text: 'Sync...',
+    left:0,
+    right:0,
+    font: "bold 18px"
+}).appendTo(ui.contentView);
