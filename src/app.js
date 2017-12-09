@@ -9,10 +9,54 @@ const {
     TabFolder,
     TextView,
     ui
-} = require('tabris');
+} = require("tabris");
 
 let json = "";
-let navigationView = ""
+let navigationView = new NavigationView({
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    drawerActionVisible: true
+}).appendTo(ui.contentView);
+
+
+
+function toFlatlist(Pakket) {
+    let t = Pakket.Cursussen.map(Cursus => {
+        return {
+            Type: "Cursus",
+            Nummer: Cursus.Nummer,
+            Descr: Cursus.Descr,
+            Price: Cursus.Price
+        };
+    });
+    t.unshift({
+        Type: "Pakket",
+        Nummer: Pakket.Nummer,
+        Descr: Pakket.Descr,
+        Price: Pakket.Price
+    });
+    return t;
+}
+
+function toFlatlistVak(Vak) {
+    let t = Vak.Cursussen.map(Cursus => {
+        return {
+            Type: "Cursus",
+            Nummer: Cursus.Nummer,
+            Descr: Cursus.Descr,
+            Price: Cursus.Price
+        };
+    });
+    t.unshift({
+        Type: "Vak",
+        Nummer: 0,
+        Descr: Vak.Name,
+        Price: 0
+    });
+    return t;
+}
 
 function MenuTab(datanode) {
     let page = new Page({
@@ -22,10 +66,16 @@ function MenuTab(datanode) {
     let scrollView1 = new ScrollView({
         left: 0,
         right: 0,
-        top: 5,
+        top: 0,
         bottom: 0
     }).appendTo(page)
-    console.log('selected', datanode.Items.length)
+    new Composite({
+        left: 0,
+        top: 0,
+        right: 0,
+        height: 1,
+        background: "#b8b8b8"
+    }).appendTo(scrollView1);
 
     new CollectionView({
         left: 0,
@@ -33,55 +83,193 @@ function MenuTab(datanode) {
         right: 0,
         bottom: 0,
         itemCount: datanode.Items.length,
-        cellHeight: 50,
         createCell: () => {
-            let cell = new Composite({
-                    id: 10
-                })
-                .on('tap', ({
+            let cell = new Composite()
+                .on("tap", ({
                     target
                 }) => {
-                    if (!datanode.Items[target.idx].hasOwnProperty('Page')) {
-                        if (datanode.Items[target.idx].hasOwnProperty('Items')) {
+                    if (!datanode.Items[target.idx].hasOwnProperty("Page")) {
+                        if (datanode.Items[target.idx].hasOwnProperty("Items")) {
+
                             datanode.Items[target.idx].Page = MenuTab(datanode.Items[target.idx])
-                        }
-                        if (datanode.Items[target.idx].hasOwnProperty('NumerOfBundles')) {
+                        } else {
+
+
+                            datanode.Items[target.idx].BundlesAll = [];
+                            datanode.Items[target.idx].VakkenAll = [];
+
+
+
+
+                            if (datanode.Items[target.idx].Bundles.length != 0) {
+
+                                datanode.Items[target.idx].BundlesAll = datanode.Items[target.idx].Bundles.map(x => toFlatlist(x)).reduce(function(a, b) {
+                                    return a.concat(b);
+                                });
+                                console.log("BUDLES " + datanode.Items[target.idx].BundlesAll.length)
+
+                            }
+
+                            if (datanode.Items[target.idx].Vakken.length !== 0) {
+
+                                datanode.Items[target.idx].VakkenAll = datanode.Items[target.idx].Vakken.map(x => toFlatlistVak(x)).reduce(function(a, b) {
+                                    return a.concat(b);
+                                });
+
+                            }
+
                             datanode.Items[target.idx].Page = DetailTab(datanode.Items[target.idx])
                         }
                     }
+
                     datanode.Items[target.idx].Page
                         .appendTo(navigationView);
                 });
-
-
             new TextView({
-
-                id: 'senderText',
-                top: 8,
+                id: "senderText",
+                top: 16,
                 left: 16,
-                font: 'bold 18px'
+                bottom: 16,
+                right: 16,
+                font: "bold 18px"
             }).appendTo(cell);
-
-            new TextView({
-
-                id: 'idx',
-                top: 8,
-                left: 16,
-                font: 'bold 18px'
+            new Composite({
+                left: 0,
+                bottom: 0,
+                right: 0,
+                height: 1,
+                background: "#b8b8b8"
             }).appendTo(cell);
             return cell;
 
         },
         updateCell: (cell, index) => {
             let vak = datanode.Items[index];
-            cell.find('#senderText').set('text', vak.Item);
+            cell.find("#senderText").set("text", vak.Item);
             cell.idx = index;
-
-
         }
     }).appendTo(scrollView1);
 
     return page
+}
+
+
+
+function Item() {
+    let cell = new Composite();
+
+    new TextView({
+        id: "Nummer",
+        top: 3,
+        left: 16
+    }).appendTo(cell);
+    new TextView({
+        id: "descr",
+        top: 3,
+        right: "#price 16",
+        left: "#Nummer 16"
+    }).appendTo(cell);
+
+    new TextView({
+        id: "price",
+        top: 3,
+        right: 16
+    }).appendTo(cell);
+
+
+    return cell;
+}
+
+function GroupItem() {
+    let cell = new Composite({
+        id: "sep",
+        top: "prev()",
+        left: 0,
+        right: 0
+    });
+    let cell2 = new Composite({
+        top: "prev() 35",
+        left: 0,
+        right: 0,
+        background: "#ebebeb"
+    }).appendTo(cell);
+
+    new TextView({
+        id: "Nummer",
+        top: "#sep 3",
+        left: 16,
+        bottom: 5,
+        font: "bold 18px"
+    }).appendTo(cell2);
+    new TextView({
+        id: "descr",
+        top: "#sep 3",
+        right: "#price 16",
+        left: "#Nummer 16",
+        font: "bold 18px"
+    }).appendTo(cell2);
+    new TextView({
+        id: "price",
+        top: "#sep 3",
+        right: 16,
+        font: "bold 18px"
+    }).appendTo(cell2);
+    return cell;
+}
+
+
+function VakItem() {
+    let cell = new Composite({
+        right: 0,
+        left: 0,
+    });
+
+    let cell2 = new Composite({
+        right: 0,
+        left: 0,
+        top: "prev() 35",
+        font: "bold 16px",
+
+    }).appendTo(cell);
+    new TextView({
+        left: 0,
+        top: "prev()",
+        right: 0,
+        id: "descr",
+        left: 16,
+        right: 16,
+        alignment: "right"
+    }).appendTo(cell2);
+    return cell;
+}
+
+function CursusItem() {
+    let cell = new Composite({
+        top: "prev() 1",
+        left: 16,
+        right: 16,
+        background: "#ebebeb"
+    })
+    new TextView({
+        id: "Nummer",
+        top: 3,
+        left: 16,
+        font: "bold 18px"
+    }).appendTo(cell);
+    new TextView({
+        id: "descr",
+        top: 3,
+        right: "#price 16",
+        left: "#Nummer 16",
+        font: "bold 18px"
+    }).appendTo(cell);
+    new TextView({
+        id: "price",
+        top: 3,
+        right: 16,
+        font: "bold 18px"
+    }).appendTo(cell);
+    return cell;
 }
 
 function DetailTab(datanode) {
@@ -90,9 +278,9 @@ function DetailTab(datanode) {
             title: datanode.Item,
             autoDispose: false
         })
-        .on('appear', () => {
-            if (datanode.NumerOfBundles === 0) {
-                ui.find('#Paketten').first().visible = false
+        .on("appear", () => {
+            if (datanode.NumerOfBundles === undefined || datanode.NumerOfBundles === null || datanode.NumerOfBundles === 0) {
+                ui.find("#Paketten").first().visible = false
             }
         });
 
@@ -106,42 +294,30 @@ function DetailTab(datanode) {
 
     let Pakkettab = new Tab({
         title: "Paketten",
-        id: 'Paketten',
+        id: "Paketten",
     }).appendTo(tabFolder);
     let scrollView1 = new ScrollView({
         left: 0,
         right: 0,
-        top: 5,
+        top: 0,
         bottom: 0
     }).appendTo(Pakkettab);
-    new TextView({
-        id: 'senderText',
-        top: 8,
-        left: 16,
-        font: 'bold 18px'
-    }).appendTo(scrollView1);
     new CollectionView({
         left: 0,
         top: 0,
         right: 0,
         bottom: 0,
-        itemCount: datanode.Bundles.length,
-        cellHeight: 120,
-        createCell: () => {
-            let cell = new Composite();
-            new TextView({
-                id: 'senderText',
-                top: 8,
-                left: 16,
-                font: 'bold 18px'
-            }).appendTo(cell);
-            return cell;
-        },
+        itemCount: datanode.BundlesAll.length,
+        cellType: index => datanode.BundlesAll[index].Type,
+        createCell: (type) => type === "Cursus" ? Item() : GroupItem(),
         updateCell: (cell, index) => {
-            let pakket = datanode.Bundles[index];
-            cell.find('#senderText').set('text', pakket.Descr);
+            let pakket = datanode.BundlesAll[index];
+            cell.find("#Nummer").set("text", pakket.Nummer);
+            cell.find("#descr").set("text", pakket.Descr);
+            cell.find("#price").set("text", "€ " + pakket.Price);
         }
     }).appendTo(scrollView1);
+
     let Cursussentab = new Tab({
         title: "Cursussen"
     }).appendTo(tabFolder);
@@ -156,41 +332,28 @@ function DetailTab(datanode) {
         top: 0,
         right: 0,
         bottom: 0,
-        itemCount: datanode.Vakken.length,
-        cellHeight: 120,
-        createCell: () => {
-            let cell = new Composite();
-            new TextView({
-                id: 'senderText',
-                top: 8,
-                left: 16,
-                font: 'bold 18px'
-            }).appendTo(cell);
-            return cell;
-        },
+        itemCount: datanode.VakkenAll.length,
+        cellType: index => datanode.VakkenAll[index].Type,
+        createCell: (type) => type === "Cursus" ? CursusItem() : VakItem(),
         updateCell: (cell, index) => {
-            let vak = datanode.Vakken[index];
-            cell.find('#senderText').set('text', vak.Name);
+
+            let pakket = datanode.VakkenAll[index];
+            if (datanode.VakkenAll[index].Type == "Cursus") {
+                cell.find("#Nummer").set("text", pakket.Nummer);
+                cell.find("#descr").set("text", pakket.Descr);
+                cell.find("#price").set("text", "€ " + pakket.Price);
+            } else {
+                cell.find("#descr").set("text", pakket.Descr);
+            }
         }
     }).appendTo(scrollView2);
     return page;
 }
 
-
-
-fetch('http://cursussen.uantwerpen.be/Home/Level')
+fetch("http://cursussen.uantwerpen.be/Home/Level")
     .then(response => response.json())
     .then((js) => {
         json = js;
-
-        navigationView = new NavigationView({
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-            drawerActionVisible: true
-        }).appendTo(ui.contentView);
-
         json.Page = MenuTab(json);
         json.Page.appendTo(navigationView);
     });
