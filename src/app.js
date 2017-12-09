@@ -1,5 +1,5 @@
 const {
-    ActivityIndicator, 
+    ActivityIndicator,
     CollectionView,
     Composite,
     ImageView,
@@ -11,9 +11,18 @@ const {
     TextView,
     ui
 } = require("tabris");
+const TIMEOUT = 2000;
+const TOO_MANY_REQUESTS = 429;
 
 let json = "";
 
+new TextView({
+    class: "LL",
+    centerX: 0,
+    centerY: 0,
+    text: 'Sync...',
+    font: "bold 18px"
+}).appendTo(ui.contentView);
 
 
 
@@ -23,14 +32,16 @@ function toFlatlist(Pakket) {
             Type: "Cursus",
             Nummer: Cursus.Nummer,
             Descr: Cursus.Descr,
-            Price: Cursus.Price
+            Price: Cursus.Price,
+            Campus: Cursus.Campus
         };
     });
     t.unshift({
         Type: "Pakket",
         Nummer: Pakket.Nummer,
         Descr: Pakket.Descr,
-        Price: Pakket.Price
+        Price: Pakket.Price,
+        Campus: Pakket.Campus
     });
     return t;
 }
@@ -41,14 +52,13 @@ function toFlatlistVak(Vak) {
             Type: "Cursus",
             Nummer: Cursus.Nummer,
             Descr: Cursus.Descr,
-            Price: Cursus.Price
+            Price: Cursus.Price,
+            Campus: Cursus.Campus
         };
     });
     t.unshift({
         Type: "Vak",
-        Nummer: 0,
-        Descr: Vak.Name,
-        Price: 0
+        Descr: Vak.Name
     });
     return t;
 }
@@ -233,7 +243,8 @@ function VakItem() {
         id: "descr",
         left: 16,
         right: 8,
-        alignment: "right"
+        alignment: "right",
+        textColor: 'rgba(71, 161, 238, 0.75)'
     }).appendTo(cell2);
     return cell;
 }
@@ -307,7 +318,7 @@ function DetailTab(datanode) {
         createCell: (type) => type === "Cursus" ? Item() : GroupItem(),
         updateCell: (cell, index) => {
             let pakket = datanode.BundlesAll[index];
-            cell.find("#Nummer").set("text", pakket.Nummer);
+            cell.find("#Nummer").set("text", /*pakket.Campus + */ pakket.Nummer);
             cell.find("#descr").set("text", pakket.Descr);
             cell.find("#price").set("text", "€ " + pakket.Price);
         }
@@ -334,7 +345,7 @@ function DetailTab(datanode) {
 
             let pakket = datanode.VakkenAll[index];
             if (datanode.VakkenAll[index].Type == "Cursus") {
-                cell.find("#Nummer").set("text", pakket.Nummer);
+                cell.find("#Nummer").set("text", /*pakket.Campus +*/ pakket.Nummer);
                 cell.find("#descr").set("text", pakket.Descr);
                 cell.find("#price").set("text", "€ " + pakket.Price);
             } else {
@@ -342,41 +353,50 @@ function DetailTab(datanode) {
             }
         }
     }).appendTo(scrollView2);
+
     return page;
 }
 
-   
-
-
-fetch("http://cursussen.uantwerpen.be/Home/Level")
+fetchWithBackoff("http://cursussen.uantwerpen.be/Home/Level")
     .then(response => response.json())
     .then((js) => {
-  let navigationView = new NavigationView({
-    left: 0,
-    top: 0,
-    right: 0,
-    bottom: 0
-  })
-  .appendTo(ui.contentView);
-  
+        let navigationView = new NavigationView({
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0
+            })
+            .appendTo(ui.contentView);
+
         json = js;
         json.Page = MenuTab(json, navigationView);
         json.Page.appendTo(navigationView);
-  		ui.find('.LL').set('visible', false);        
-});
-    
+        ui.find('.LL').set('visible', false);
+    });
+
 let activityIndicator = new ActivityIndicator({
-  class:"LL",
-  centerX: 0,
-  centerY: 0
+    class: "LL",
+    centerX: 0,
+    bottom: 50
 }).appendTo(ui.contentView);
 
-new TextView({
-    class:"LL",
-    top:"prev() 0",
-    alignment: 'center',
-    text: 'Sync...',
-    left:0,
-    right:0,
-    font: "bold 18px"
-}).appendTo(ui.contentView);
+function fetchWithBackoff(url, waitTime)
+{
+    return new Promise((resolve, reject) => {
+        if (waitTime > TIMEOUT) {
+            reject('Timeout fetching data');
+        }
+        setTimeout(() => {
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        resolve(response);
+                    } else if (response.status === TOO_MANY_REQUESTS) {
+                        resolve(fetchWithBackoff(url, waitTime ? (2 * waitTime) : 50));
+                    } else {
+                        reject(response);
+                    }
+                });
+        }, waitTime);
+    });
+}
