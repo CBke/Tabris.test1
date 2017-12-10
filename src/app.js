@@ -11,20 +11,21 @@ const {
     TextView,
     ui
 } = require("tabris");
+
 const TIMEOUT = 2000;
 const TOO_MANY_REQUESTS = 429;
 
+
+
 let json = "";
 
-new TextView({
+let status = new TextView({
     class: "LL",
     centerX: 0,
     centerY: 0,
-    text: 'Sync...',
+    text: 'Syncing...',
     font: "bold 18px"
 }).appendTo(ui.contentView);
-
-
 
 function toFlatlist(Pakket) {
     let t = Pakket.Cursussen.map(Cursus => {
@@ -63,17 +64,22 @@ function toFlatlistVak(Vak) {
     return t;
 }
 
+
+
 function MenuTab(datanode, navigationView) {
+
     let page = new Page({
         title: datanode.Title,
         autoDispose: false
     });
+
     let scrollView1 = new ScrollView({
         left: 0,
         right: 0,
         top: 0,
         bottom: 0
     }).appendTo(page)
+
     new Composite({
         left: 0,
         top: 0,
@@ -95,24 +101,15 @@ function MenuTab(datanode, navigationView) {
                 }) => {
                     if (!datanode.Items[target.idx].hasOwnProperty("Page")) {
                         if (datanode.Items[target.idx].hasOwnProperty("Items")) {
-
                             datanode.Items[target.idx].Page = MenuTab(datanode.Items[target.idx], navigationView)
                         } else {
-
-
                             datanode.Items[target.idx].BundlesAll = [];
                             datanode.Items[target.idx].VakkenAll = [];
-
-
-
-
                             if (datanode.Items[target.idx].Bundles.length != 0) {
 
                                 datanode.Items[target.idx].BundlesAll = datanode.Items[target.idx].Bundles.map(x => toFlatlist(x)).reduce(function(a, b) {
                                     return a.concat(b);
                                 });
-                                console.log("BUDLES " + datanode.Items[target.idx].BundlesAll.length)
-
                             }
 
                             if (datanode.Items[target.idx].Vakken.length !== 0) {
@@ -120,13 +117,10 @@ function MenuTab(datanode, navigationView) {
                                 datanode.Items[target.idx].VakkenAll = datanode.Items[target.idx].Vakken.map(x => toFlatlistVak(x)).reduce(function(a, b) {
                                     return a.concat(b);
                                 });
-
                             }
-
                             datanode.Items[target.idx].Page = DetailTab(datanode.Items[target.idx])
                         }
                     }
-
                     datanode.Items[target.idx].Page
                         .appendTo(navigationView);
                 });
@@ -145,8 +139,9 @@ function MenuTab(datanode, navigationView) {
                 height: 1,
                 background: "#b8b8b8"
             }).appendTo(cell);
-            return cell;
 
+
+            return cell;
         },
         updateCell: (cell, index) => {
             let vak = datanode.Items[index];
@@ -158,9 +153,8 @@ function MenuTab(datanode, navigationView) {
     return page
 }
 
-
-
 function Item() {
+
     let cell = new Composite();
 
     new TextView({
@@ -168,6 +162,7 @@ function Item() {
         top: 3,
         left: 16
     }).appendTo(cell);
+
     new TextView({
         id: "descr",
         top: 3,
@@ -181,17 +176,18 @@ function Item() {
         right: 16
     }).appendTo(cell);
 
-
     return cell;
 }
 
 function GroupItem() {
+
     let cell = new Composite({
         id: "sep",
         top: "prev()",
         left: 0,
         right: 0
     });
+
     let cell2 = new Composite({
         top: "prev() 35",
         left: 0,
@@ -204,8 +200,9 @@ function GroupItem() {
         top: "#sep 3",
         left: 16,
         bottom: 5,
-        font: "bold 18px"
+        font: "bold 16px"
     }).appendTo(cell2);
+
     new TextView({
         id: "descr",
         top: "#sep 3",
@@ -213,29 +210,31 @@ function GroupItem() {
         left: "#Nummer 16",
         font: "bold 18px"
     }).appendTo(cell2);
+
     new TextView({
         id: "price",
         top: "#sep 3",
         right: 16,
         font: "bold 18px"
     }).appendTo(cell2);
+
     return cell;
 }
 
-
 function VakItem() {
+
     let cell = new Composite({
         right: 0,
         left: 0,
     });
 
-    let cell2 = new Composite({
+    new Composite({
         right: 0,
         left: 0,
         top: "prev() 35",
-        font: "bold 16px",
-
+        font: "bold 14px",
     }).appendTo(cell);
+
     new TextView({
         left: 0,
         top: "prev()",
@@ -245,36 +244,48 @@ function VakItem() {
         right: 8,
         alignment: "right",
         textColor: 'rgba(71, 161, 238, 0.75)'
-    }).appendTo(cell2);
+    }).appendTo(cell);
+
+    let cellline = new Composite({
+        right: 0,
+        left: 0,
+        top: "prev()",
+        height: 1,
+        background: 'rgba(71, 161, 238, 0.75)',
+    }).appendTo(cell);
     return cell;
 }
 
 function CursusItem() {
+
     let cell = new Composite({
         top: "prev() 1",
         left: 16,
         right: 16,
-        background: "#ebebeb"
     })
+
     new TextView({
         id: "Nummer",
         top: 3,
         left: 16,
-        font: "bold 18px"
+        font: "bold 16px"
     }).appendTo(cell);
+
     new TextView({
         id: "descr",
         top: 3,
         right: "#price 16",
         left: "#Nummer 16",
-        font: "bold 18px"
+        font: "bold 16px"
     }).appendTo(cell);
+
     new TextView({
         id: "price",
         top: 3,
         right: 16,
-        font: "bold 18px"
+        font: "bold 16px"
     }).appendTo(cell);
+
     return cell;
 }
 
@@ -290,6 +301,8 @@ function DetailTab(datanode) {
             }
         });
 
+
+
     let tabFolder = new TabFolder({
         left: 0,
         top: 0,
@@ -302,12 +315,14 @@ function DetailTab(datanode) {
         title: "Paketten",
         id: "Paketten",
     }).appendTo(tabFolder);
+
     let scrollView1 = new ScrollView({
         left: 0,
         right: 0,
         top: 0,
         bottom: 0
     }).appendTo(Pakkettab);
+
     new CollectionView({
         left: 0,
         top: 0,
@@ -327,12 +342,14 @@ function DetailTab(datanode) {
     let Cursussentab = new Tab({
         title: "Cursussen"
     }).appendTo(tabFolder);
+
     let scrollView2 = new ScrollView({
         left: 0,
         right: 0,
         top: 0,
         bottom: 0
     }).appendTo(Cursussentab);
+
     new CollectionView({
         left: 0,
         top: 0,
@@ -357,9 +374,56 @@ function DetailTab(datanode) {
     return page;
 }
 
-fetchWithBackoff("http://cursussen.uantwerpen.be/Home/Level")
+function RemoveEmptyNodes(js) {
+    js.Items.map((item0) => {
+        item0.Items.map((item1) => {
+            item1.Items.map((item2) => {
+                item2.Items.map((item3) => {
+
+                    item3.marked = true;
+                    item2.marked = true;
+                    item1.marked = true;
+                    item0.marked = true;
+                });
+            });
+        });
+    });
+
+    for (var i = js.Items.length - 1; i >= 0; i--) {
+        if (!js.Items[i].marked) {
+            js.Items.splice(i, 1);
+        } else {
+
+
+            for (var j = js.Items[i].Items.length - 1; j >= 0; j--) {
+                if (!js.Items[i].Items[j].marked) {
+                    js.Items[i].Items.splice(j, 1);
+                } else {
+
+                    for (var k = js.Items[i].Items[j].Items.length - 1; k >= 0; k--) {
+                        if (!js.Items[i].Items[j].Items[k].marked) {
+                            js.Items[i].Items[j].Items.splice(k, 1);
+                        }
+                    }
+
+                }
+
+
+            }
+
+
+        }
+    }
+
+}
+
+fetch("http://cursussen.uantwerpen.be/Home/Level")
     .then(response => response.json())
     .then((js) => {
+        json = js;
+
+
+        RemoveEmptyNodes(js);
         let navigationView = new NavigationView({
                 left: 0,
                 top: 0,
@@ -368,7 +432,7 @@ fetchWithBackoff("http://cursussen.uantwerpen.be/Home/Level")
             })
             .appendTo(ui.contentView);
 
-        json = js;
+
         json.Page = MenuTab(json, navigationView);
         json.Page.appendTo(navigationView);
         ui.find('.LL').set('visible', false);
@@ -379,24 +443,3 @@ let activityIndicator = new ActivityIndicator({
     centerX: 0,
     bottom: 50
 }).appendTo(ui.contentView);
-
-function fetchWithBackoff(url, waitTime)
-{
-    return new Promise((resolve, reject) => {
-        if (waitTime > TIMEOUT) {
-            reject('Timeout fetching data');
-        }
-        setTimeout(() => {
-            fetch(url)
-                .then(response => {
-                    if (response.ok) {
-                        resolve(response);
-                    } else if (response.status === TOO_MANY_REQUESTS) {
-                        resolve(fetchWithBackoff(url, waitTime ? (2 * waitTime) : 50));
-                    } else {
-                        reject(response);
-                    }
-                });
-        }, waitTime);
-    });
-}
