@@ -192,7 +192,7 @@ function GroupItem() {
         top: "prev() 35",
         left: 0,
         right: 0,
-        background: "#ebebeb"
+        background: "rgba(71, 161, 238, 0.75)"
     }).appendTo(cell);
 
     new TextView({
@@ -242,8 +242,8 @@ function VakItem() {
         id: "descr",
         left: 16,
         right: 8,
-        alignment: "right",
-        textColor: 'rgba(71, 161, 238, 0.75)'
+        alignment: "center",
+        textColor: "rgba(71, 161, 238, 0.75)"
     }).appendTo(cell);
 
     let cellline = new Composite({
@@ -251,7 +251,7 @@ function VakItem() {
         left: 0,
         top: "prev()",
         height: 1,
-        background: 'rgba(71, 161, 238, 0.75)',
+        background: "rgba(71, 161, 238, 0.75)",
     }).appendTo(cell);
     return cell;
 }
