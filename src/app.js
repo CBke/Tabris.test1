@@ -12,12 +12,7 @@ const {
     ui
 } = require("tabris");
 
-const TIMEOUT = 2000;
-const TOO_MANY_REQUESTS = 429;
 
-
-
-let json = "";
 
 let status = new TextView({
     class: "LL",
@@ -79,14 +74,6 @@ function MenuTab(datanode, navigationView) {
         top: 0,
         bottom: 0
     }).appendTo(page)
-
-    new Composite({
-        left: 0,
-        top: 0,
-        right: 0,
-        height: 1,
-        background: "#b8b8b8"
-    }).appendTo(scrollView1);
 
     new CollectionView({
         left: 0,
@@ -191,8 +178,7 @@ function GroupItem() {
     let cell2 = new Composite({
         top: "prev() 35",
         left: 0,
-        right: 0,
-        background: "rgba(71, 161, 238, 0.75)"
+        right: 0
     }).appendTo(cell);
 
     new TextView({
@@ -200,7 +186,7 @@ function GroupItem() {
         top: "#sep 3",
         left: 16,
         bottom: 5,
-        font: "bold 16px"
+        font: "bold 18px"
     }).appendTo(cell2);
 
     new TextView({
@@ -217,6 +203,14 @@ function GroupItem() {
         right: 16,
         font: "bold 18px"
     }).appendTo(cell2);
+
+    new Composite({
+        left: 0,
+        bottom: 0,
+        right: 0,
+        height: 1,
+        background: "#b8b8b8"
+    }).appendTo(cell);
 
     return cell;
 }
@@ -243,16 +237,23 @@ function VakItem() {
         left: 16,
         right: 8,
         alignment: "center",
-        textColor: "rgba(71, 161, 238, 0.75)"
     }).appendTo(cell);
 
     let cellline = new Composite({
         right: 0,
         left: 0,
         top: "prev()",
-        height: 1,
-        background: "rgba(71, 161, 238, 0.75)",
+        height: 1
     }).appendTo(cell);
+
+    new Composite({
+        left: 0,
+        bottom: 0,
+        right: 0,
+        height: 1,
+        background: "#b8b8b8"
+    }).appendTo(cell);
+
     return cell;
 }
 
@@ -293,15 +294,13 @@ function DetailTab(datanode) {
 
     let page = new Page({
             title: datanode.Item,
-            autoDispose: false
+            autoDispose: false,
         })
         .on("appear", () => {
             if (datanode.NumerOfBundles === undefined || datanode.NumerOfBundles === null || datanode.NumerOfBundles === 0) {
                 ui.find("#Paketten").first().visible = false
             }
         });
-
-
 
     let tabFolder = new TabFolder({
         left: 0,
@@ -375,11 +374,11 @@ function DetailTab(datanode) {
 }
 
 function RemoveEmptyNodes(js) {
+    // if traversing 4 levels deep is possible, mark whole path as true
     js.Items.map((item0) => {
         item0.Items.map((item1) => {
             item1.Items.map((item2) => {
                 item2.Items.map((item3) => {
-
                     item3.marked = true;
                     item2.marked = true;
                     item1.marked = true;
@@ -388,42 +387,31 @@ function RemoveEmptyNodes(js) {
             });
         });
     });
-
+    // traversing 4 levels deep delete the not marked ones on the way
     for (var i = js.Items.length - 1; i >= 0; i--) {
         if (!js.Items[i].marked) {
             js.Items.splice(i, 1);
         } else {
-
-
             for (var j = js.Items[i].Items.length - 1; j >= 0; j--) {
                 if (!js.Items[i].Items[j].marked) {
                     js.Items[i].Items.splice(j, 1);
                 } else {
-
                     for (var k = js.Items[i].Items[j].Items.length - 1; k >= 0; k--) {
                         if (!js.Items[i].Items[j].Items[k].marked) {
                             js.Items[i].Items[j].Items.splice(k, 1);
                         }
                     }
-
                 }
-
-
             }
-
-
         }
     }
-
 }
 
 fetch("http://cursussen.uantwerpen.be/Home/Level")
     .then(response => response.json())
-    .then((js) => {
-        json = js;
+    .then((json) => {
 
-
-        RemoveEmptyNodes(js);
+        RemoveEmptyNodes(json);
         let navigationView = new NavigationView({
                 left: 0,
                 top: 0,
